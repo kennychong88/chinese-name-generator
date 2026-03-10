@@ -8,17 +8,15 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
 
-  const navItems = [
-    { id: 'compatibility', label: 'Zodiac Compatibility', icon: Users },
-    { id: 'fengShuiTips', label: 'Feng Shui Tips', icon: Compass },
-    { id: 'astrology', label: 'Zodiac Signs', icon: Sun },
-    { id: 'famousPeople', label: 'Famous People', icon: Users },
-    { id: 'blog', label: 'Blog', icon: BookOpen },
-    { id: 'faq', label: 'FAQ', icon: HelpCircle },
-    { id: 'about', label: 'About', icon: Info },
-    { id: 'home', label: 'Home', icon: Home }
-  ];
-
+const navItems = [
+  { id: 'compatibility', label: 'Zodiac Compatibility', icon: Users },
+  { id: 'fengShuiTips', label: 'Feng Shui Tips', icon: Compass },
+  { id: 'astrology', label: 'Zodiac Signs', icon: Sun },
+  { id: 'blog', label: 'Blog', icon: BookOpen },
+  { id: 'faq', label: 'FAQ', icon: HelpCircle },
+  { id: 'about', label: 'About', icon: Info },
+  { id: 'home', label: 'Home', icon: Home }
+];
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">

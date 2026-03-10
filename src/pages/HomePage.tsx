@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Compass, ArrowRight, Brain, Zap, Globe, Heart, Info, Users, User, Palette, Crown, Award } from 'lucide-react';
 import { trackPageView, trackNameGeneration } from '../utils/analytics';
 import { generateNames } from '../services/chineseNameGenerator';
-import { generateNamesInspiredByFamousPerson, FamousPersonNameResponse } from '../services/famousPersonNameGenerator';
-import { FamousPerson } from '../data/famousChinesePeople';
 import NameCard from '../components/NameCard';
-import FamousPersonSelector from '../components/FamousPersonSelector';
-import FamousPersonNameCard from '../components/FamousPersonNameCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
 // interface NameData {
@@ -25,12 +21,8 @@ const HomePage: React.FC = () => {
   const [gender, setGender] = useState('neutral');
   const [style, setStyle] = useState('neutral');
   const [names, setNames] = useState<Array<{id: string; name: string; pinyin: string; meaning: string; gender: string}>>([]);
-  const [famousPersonNames, setFamousPersonNames] = useState<FamousPersonNameResponse['names']>([]);
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [selectedFamousPerson, setSelectedFamousPerson] = useState<FamousPerson | null>(null);
-  const [showFamousPersonSelector, setShowFamousPersonSelector] = useState(false);
-  const [generationMode, setGenerationMode] = useState<'normal' | 'famous-person'>('normal');
 
   // SEO optimization - set page title and meta description
   React.useEffect(() => {
@@ -62,36 +54,19 @@ const HomePage: React.FC = () => {
     
     setLoading(true);
     try {
-      if (generationMode === 'famous-person' && selectedFamousPerson) {
-  const result = await generateNamesInspiredByFamousPerson({
-    englishName: englishName.trim(),
-    gender: gender as 'male' | 'female' | 'neutral',
-    favoritePerson: selectedFamousPerson,  // 直接传入整个人物对象
-    style: style as 'traditional' | 'modern' | 'business' | 'cute' | 'neutral'
-  });
-        
-        setFamousPersonNames(result.names);
-        setNames([]); // 清空普通名字
-        trackNameGeneration(gender, style);
-      } else {
-        // 使用普通算法
-        const result = await generateNames({
-          englishName: englishName.trim(),
-          gender: gender as 'male' | 'female' | 'neutral',
-          style: style as 'traditional' | 'modern' | 'business' | 'cute' | 'neutral'
-        });
-        
-        setNames(result.names);
-        setFamousPersonNames([]); // 清空名人名字
-        trackNameGeneration(gender, style);
-      }
-      
-      setHasGenerated(true);
-    } catch (error) {
-      console.error('生成名字失败:', error);
-    } finally {
-      setLoading(false);
-    }
+    const result = await generateNames({
+      englishName: englishName.trim(),
+      gender: gender as 'male' | 'female' | 'neutral',
+      style: style as 'traditional' | 'modern' | 'business' | 'cute' | 'neutral'
+    });
+    
+    setNames(result.names);
+    setHasGenerated(true);
+  } catch (error) {
+    console.error('生成名字失败:', error);
+  } finally {
+    setLoading(false);    
+	}
   };
 
   // 龙虎生肖图标组件
@@ -328,87 +303,6 @@ const services = [
               </div>
             </div>
 
-            {/* Generation Mode Selection */}
-            <div className="space-y-3 relative z-10">
-              <label className="flex items-center space-x-2 text-sm font-semibold text-white/90">
-                <Crown className="w-4 h-4" />
-                <span>Name Generation Mode</span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: 'normal', label: 'Traditional', desc: 'Classic algorithm', icon: Sparkles },
-                  { value: 'famous-person', label: 'Famous Person', desc: 'Based on Chinese celebrities', icon: Award }
-                ].map((option) => {
-                  const Icon = option.icon;
-                  return (
-                    <label key={option.value} className="relative">
-                      <input
-                        type="radio"
-                        name="generationMode"
-                        value={option.value}
-                        checked={generationMode === option.value}
-                        onChange={(e) => setGenerationMode(e.target.value as 'normal' | 'famous-person')}
-                        className="sr-only"
-                      />
-                      <div className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 backdrop-blur-sm shadow-lg ${
-                        generationMode === option.value 
-                          ? 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-xl shadow-yellow-400/30 scale-105' 
-                          : 'border-white/20 hover:border-yellow-400/50 hover:bg-white/10 text-white/80 hover:scale-102'
-                      }`}>
-                        <Icon className="w-5 h-5" />
-                        <div>
-                          <div className="font-semibold text-sm">{option.label}</div>
-                          <div className="text-xs text-white/70">{option.desc}</div>
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Famous Person Selection */}
-            {generationMode === 'famous-person' && (
-              <div className="space-y-3 relative z-10">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-white/90">
-                  <Users className="w-4 h-4" />
-                  <span>Choose Your Favorite Chinese Historical Figure</span>
-                </label>
-                {selectedFamousPerson ? (
-                  <div className="bg-yellow-500/10 backdrop-blur-sm rounded-xl border border-yellow-400/20 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full flex items-center justify-center">
-                          <span className="text-lg font-bold text-yellow-400">{selectedFamousPerson.name[0]}</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white">{selectedFamousPerson.name}</h4>
-                          <p className="text-white/70 text-sm">{selectedFamousPerson.pinyin}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowFamousPersonSelector(true)}
-                        className="px-3 py-1 bg-white/10 text-white/80 rounded-lg hover:bg-white/20 transition-colors duration-300 text-sm"
-                      >
-                        Change
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowFamousPersonSelector(true)}
-                    className="w-full p-4 border-2 border-dashed border-white/20 rounded-xl text-white/70 hover:border-yellow-400/50 hover:text-yellow-400 transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Users className="w-5 h-5" />
-                      <span>Click to choose your favorite Chinese historical figure</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            )}
 
             {/* Style Selection */}
             <div className="space-y-3 relative z-10">
@@ -448,38 +342,31 @@ const services = [
 
             {/* Submit Button */}
             <div className="relative z-10">
-              <button
-                type="submit"
-                disabled={loading || !englishName.trim() || (generationMode === 'famous-person' && !selectedFamousPerson)}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-5 px-8 rounded-xl font-bold text-lg hover:from-yellow-400 hover:to-orange-500 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-yellow-500/30 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-yellow-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-                <span className="flex items-center justify-center space-x-2 relative z-10">
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="w-5 h-5" />
-                      <span>
-                        {generationMode === 'famous-person' 
-                          ? `Generate names inspired by ${selectedFamousPerson?.name}`
-                          : 'Generate Chinese Names with AI'
-                        }
-                      </span>
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </span>
-              </button>
+<button
+  type="submit"
+  disabled={loading || !englishName.trim()}
+  className="..."
+>
+  <span className="...">
+    {loading ? (
+      <>
+        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        <span>Generating...</span>
+      </>
+    ) : (
+      <>
+        <Brain className="w-5 h-5" />
+        <span>Generate Chinese Names with AI</span>
+        <ArrowRight className="w-5 h-5" />
+      </>
+    )}
+  </span>
+</button>
             </div>
           </form>
 
           {/* Results Section */}
-          {(hasGenerated || names.length > 0 || famousPersonNames.length > 0) && (
+          {(hasGenerated || names.length > 0 ) && (
             <div>
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">
@@ -497,16 +384,11 @@ const services = [
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {generationMode === 'famous-person' 
-                    ? famousPersonNames.map((name, index) => (
-                        <FamousPersonNameCard key={index} name={name} />
-                      ))
-                    : names.map((name) => (
-                        <NameCard key={name.id} name={name} />
-                      ))
-                  }
-                </div>
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {names.map((name) => (
+    <NameCard key={name.id} name={name} />
+  ))}
+</div>
               )}
             </div>
           )}
@@ -693,33 +575,6 @@ const services = [
           })
         }} />
 
-        {/* Famous Person Selector Modal */}
-        {showFamousPersonSelector && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-white">Choose Your Favorite Chinese Historical Figure</h3>
-                  <button
-                    onClick={() => setShowFamousPersonSelector(false)}
-                    className="text-white/70 hover:text-white text-2xl"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <FamousPersonSelector
-                  gender={gender}
-                  style={style}
-                  onPersonSelect={(person) => {
-                    setSelectedFamousPerson(person);
-                    setShowFamousPersonSelector(false);
-                  }}
-                  selectedPerson={selectedFamousPerson}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
