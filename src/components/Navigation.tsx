@@ -58,7 +58,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
             <div className="hidden xs:flex flex-col">
-              <span className="text-sm sm:text-base font-bold text-white/90 leading-tight">Chinese Names</span>
+              <span className="text-sm sm:text-base font-bold text-white/90 leading-tight"> The Name Dragon</span>
               <span className="text-xs text-cyan-400/80 font-medium">Zodiac & Feng Shui</span>
             </div>
           </div>
