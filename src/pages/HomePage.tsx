@@ -12,7 +12,6 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 //   meaning: string;
 //   gender: string;
 // }
-
 console.log('🔥 DeepSeek API Key exists?', import.meta.env.VITE_DEEPSEEK_API_KEY ? '✅ YES' : '❌ NO');
 
 const HomePage: React.FC = () => {
@@ -206,19 +205,18 @@ const services = [
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500"></div>
             <div className="absolute -inset-4 bg-gradient-conic from-yellow-400/10 via-orange-400/10 to-yellow-400/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           </div>
-          <h1 className="text-6xl font-bold ...">
+<h1 className="text-6xl font-bold text-white">
   Find Your Perfect Chinese Name – It's Free!
 </h1>
-<h2 className="text-2xl ...">
+<h2 className="text-2xl font-semibold text-white/90">
   Get a Culturally Authentic Chinese Name with AI & Check Your Zodiac Match
 </h2>
-<p className="text-lg ...">
+<p className="text-lg text-white/80 leading-relaxed max-w-3xl mx-auto mb-4">
   Want a real Chinese name? Our AI creates names that sound like yours, have beautiful meanings, and won't make native speakers laugh. Check zodiac compatibility, explore traditional male names, and dive into Chinese culture – all for free.
 </p>
-<p className="text-base ...">
+<p className="text-base text-white/70 leading-relaxed max-w-4xl mx-auto">
   Use our random name picker, see if a name matches your zodiac sign, or try fantasy Chinese names for creative projects. We explain the cultural stories behind every name so you can truly connect with your new name.
-</p>
-          
+</p>          
           {/* Feng Shui Features */}
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <div className="flex items-center space-x-2 bg-yellow-500/10 backdrop-blur-sm border border-yellow-400/20 rounded-full px-4 py-2 shadow-lg">
@@ -239,13 +237,12 @@ const services = [
         {/* Name Generator Section */}
         <div className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold ...">
+<h2 className="text-4xl font-bold text-white mb-4">
   Get Your Chinese Name Now
 </h2>
-<p className="text-xl ...">
+<p className="text-xl text-white/70 max-w-3xl mx-auto">
   Fill out the form and let our AI find the perfect Chinese name for you
-</p>
-          </div>
+</p>          </div>
 
           {/* Name Generator Form */}
           <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-8 space-y-6 relative overflow-hidden mb-8">

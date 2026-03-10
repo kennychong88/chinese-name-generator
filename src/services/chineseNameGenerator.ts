@@ -16,17 +16,30 @@ interface GenerateNamesParams {
 
 export async function generateNames({ englishName, gender, style }: GenerateNamesParams): Promise<{ names: GeneratedName[] }> {
   try {
-    const prompt = `You are a professional Chinese name consultant. Based on the user's English name "${englishName}", generate 3 authentic Chinese names.
+const prompt = `You are a professional Chinese name consultant. Based on the user's English name "${englishName}", generate 3 Chinese names that STRICTLY follow the requested style: "${style}".
 
-Requirements:
-1. Pronunciation should be close to the original English name.
-2. Each character must be common in modern Chinese (avoid rare or archaic characters).
-3. The name's meaning should be positive and match the user's gender preference: ${gender === 'male' ? 'masculine' : gender === 'female' ? 'feminine' : 'neutral or unisex'}.
-4. The name style should be: ${style} (traditional/modern/business/cute/neutral).
-5. Ensure the tones are harmonious (avoid consecutive third tones).
-6. Absolutely avoid any characters with negative meanings (like death, ghost, evil, etc.) or embarrassing homophones.
+The user's gender preference is: ${gender === 'male' ? 'masculine' : gender === 'female' ? 'feminine' : 'neutral or unisex'}.
 
-Return the result as a JSON array in the following format:
+You MUST generate names that are **exclusively** in the given style, using characteristic characters and avoiding overlap with other styles.
+
+### Style Definitions and Examples:
+- **traditional**: Use classical, elegant characters often found in ancient literature and poetry. Examples: 明, 伟, 杰, 文, 武, 德, 仁, 义, 礼, 智, 信. Avoid modern trendy characters.
+- **modern**: Use contemporary, fashionable characters popular in recent decades. Examples: 轩, 宇, 诺, 梓, 涵, 睿, 熙, 辰, 一, 依. Avoid overly classical or rustic characters.
+- **business**: Use professional, sophisticated, and trustworthy characters, often with meanings related to success, wisdom, and reliability. Examples: 睿, 诚, 信, 毅, 钧, 铭, 博, 硕, 乾, 坤. Avoid cute or playful characters.
+- **cute**: Use sweet, adorable, and endearing characters, often with soft sounds or meanings related to happiness and loveliness. Examples: 小, 可, 萌, 甜, 乐, 欢, 欣, 怡, 宝, 贝. Avoid serious or formal characters.
+- **neutral**: Use balanced, harmonious characters that are not strongly gendered and work well for anyone. Examples: 思, 悦, 宁, 安, 晨, 曦, 然, 若, 清, 和. Avoid overly masculine or feminine characters.
+
+### Critical Rules:
+1. **No character reuse across the three names** – each of the three names should use different characters from the others.
+2. All three names must be significantly different from each other in sound and meaning.
+3. The names must be distinctively aligned with the selected style. If you see characters from other styles in your output, you are violating the instruction.
+4. Ensure pronunciation is close to the original English name.
+5. All characters must be common in modern Chinese (avoid rare/archaic).
+6. Meanings must be positive and match gender preference.
+7. Tones should be harmonious (avoid consecutive third tones).
+8. Absolutely avoid negative meanings or embarrassing homophones.
+
+Return ONLY a JSON array in this exact format:
 [
   {
     "chinese_name": "李明",
@@ -37,8 +50,7 @@ Return the result as a JSON array in the following format:
   ...
 ]
 
-Only output the JSON array, no other text.`;
-
+Only output the JSON array, no other text.`;  // ← 唯一的反引号在最后
     const response = await axios.post(
       'https://api.deepseek.com/v1/chat/completions',
       {
@@ -47,7 +59,7 @@ Only output the JSON array, no other text.`;
           { role: 'system', content: 'You are a helpful assistant that generates Chinese names.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.8,
+        temperature: 1.2,
         max_tokens: 500,
       },
       {
