@@ -1,0 +1,35 @@
+Failed to load resource: the server responded with a status of 403 ()
+ads?client=ca-pub-3844052645861702&output=html&adk=1812271804&adf=3025194257&lmt=1773125810&plat=3%…:1  Failed to load resource: the server responded with a status of 403 ()
+react-dom_client.js?v=485a0616:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+HomePage.tsx:20 🔥 DeepSeek API Key exists? ✅ YES
+(index):1 Error while trying to use the following icon from the Manifest: http://localhost:5173/android-chrome-192x192.png (Download error or resource isn't a valid image)
+4(index):1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+6FamousPersonNameCard.tsx:92 Uncaught TypeError: Cannot read properties of undefined (reading 'slice')
+    at FamousPersonNameCard (FamousPersonNameCard.tsx:92:39)
+    at renderWithHooks (react-dom_client.js?v=485a0616:11548:26)
+    at mountIndeterminateComponent (react-dom_client.js?v=485a0616:14926:21)
+    at beginWork (react-dom_client.js?v=485a0616:15914:22)
+    at HTMLUnknownElement.callCallback2 (react-dom_client.js?v=485a0616:3674:22)
+    at Object.invokeGuardedCallbackDev (react-dom_client.js?v=485a0616:3699:24)
+    at invokeGuardedCallback (react-dom_client.js?v=485a0616:3733:39)
+    at beginWork$1 (react-dom_client.js?v=485a0616:19765:15)
+    at performUnitOfWork (react-dom_client.js?v=485a0616:19198:20)
+    at workLoopSync (react-dom_client.js?v=485a0616:19137:13)
+3react-dom_client.js?v=485a0616:14032 The above error occurred in the <FamousPersonNameCard> component:
+
+    at FamousPersonNameCard (http://localhost:5173/src/components/FamousPersonNameCard.tsx:21:3)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at HomePage (http://localhost:5173/src/pages/HomePage.tsx?t=1773125336546:30:41)
+    at FavoritesProvider (http://localhost:5173/src/contexts/FavoritesContext.tsx:29:37)
+    at div
+    at App (http://localhost:5173/src/App.tsx?t=1773125336546:40:41)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom_client.js?v=485a0616:14032
+react-dom_client.js?v=485a0616:19413 Uncaught TypeError: Cannot read properties of undefined (reading 'slice')
+    at FamousPersonNameCard (FamousPersonNameCard.tsx:92:39)

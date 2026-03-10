@@ -17,6 +17,8 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 //   gender: string;
 // }
 
+console.log('🔥 DeepSeek API Key exists?', import.meta.env.VITE_DEEPSEEK_API_KEY ? '✅ YES' : '❌ NO');
+
 const HomePage: React.FC = () => {
   // Name Generator States
   const [englishName, setEnglishName] = useState('');
@@ -61,13 +63,12 @@ const HomePage: React.FC = () => {
     setLoading(true);
     try {
       if (generationMode === 'famous-person' && selectedFamousPerson) {
-        // 使用名人库起名
-        const result = await generateNamesInspiredByFamousPerson({
-          englishName: englishName.trim(),
-          gender: gender as 'male' | 'female' | 'neutral',
-          favoritePersonId: selectedFamousPerson.id,
-          style: style as 'traditional' | 'modern' | 'business' | 'cute' | 'neutral'
-        });
+  const result = await generateNamesInspiredByFamousPerson({
+    englishName: englishName.trim(),
+    gender: gender as 'male' | 'female' | 'neutral',
+    favoritePerson: selectedFamousPerson,  // 直接传入整个人物对象
+    style: style as 'traditional' | 'modern' | 'business' | 'cute' | 'neutral'
+  });
         
         setFamousPersonNames(result.names);
         setNames([]); // 清空普通名字
@@ -125,56 +126,56 @@ const HomePage: React.FC = () => {
     );
   };
 
-  const services = [
-    {
-      id: 'nameGenerator',
-      icon: Sparkles,
-      title: 'AI Name Picker',
-      description: 'Our AI picks the perfect Chinese name for you using ancient wisdom and modern tech. Great for babies, business, or just finding a cool name that actually means something.',
-      color: 'from-yellow-500/20 to-orange-500/20',
-      iconColor: 'text-yellow-400'
-    },
-    {
-      id: 'maleNames',
-      icon: Users,
-      title: 'Cool Guy Names',
-      description: 'Check out these awesome traditional Chinese guy names. Our random name picker gives you real names that sound great and have cool meanings behind them.',
-      color: 'from-blue-500/20 to-indigo-500/20',
-      iconColor: 'text-blue-400'
-    },
-    {
-      id: 'zodiacNames',
-      icon: DragonTigerIcon,
-      title: 'Zodiac Name Match',
-      description: 'Find a Chinese name that matches your zodiac sign perfectly. Our zodiac name picker makes sure your name vibes with your astrological destiny.',
-      color: 'from-pink-500/20 to-purple-500/20',
-      iconColor: 'text-pink-400'
-    },
-    {
-      id: 'fantasyNames',
-      icon: Brain,
-      title: 'Fantasy Name Creator',
-      description: 'Make up cool fantasy Chinese names for your games, stories, or creative stuff. Our fantasy name tool gives you imaginative names with real cultural depth.',
-      color: 'from-purple-500/20 to-pink-500/20',
-      iconColor: 'text-purple-400'
-    },
-    {
-      id: 'compatibility',
-      icon: Heart,
-      title: 'Zodiac Love Match',
-      description: 'Free zodiac compatibility checker for love! See if you and your crush are meant to be, check rat and dragon compatibility, and get the lowdown on your relationship potential.',
-      color: 'from-red-500/20 to-pink-500/20',
-      iconColor: 'text-red-400'
-    },
-    {
-      id: 'fengShuiTips',
-      icon: Compass,
-      title: 'Feng Shui Tips - Make Your Space Awesome',
-      description: 'Learn proven Feng Shui tricks to make your home and office feel amazing. Get expert tips that actually work for regular homes like yours.',
-      color: 'from-orange-500/20 to-red-500/20',
-      iconColor: 'text-orange-400'
-    }
-  ];
+const services = [
+  {
+    id: 'nameGenerator',
+    icon: Sparkles,
+    title: 'AI Name Generator',
+    description: 'Our AI picks the perfect Chinese name for you using ancient wisdom and modern tech. Great for babies, business, or just finding a cool name with real meaning.',
+    color: 'from-yellow-500/20 to-orange-500/20',
+    iconColor: 'text-yellow-400'
+  },
+  {
+    id: 'maleNames',
+    icon: Users,
+    title: 'Popular Male Names',
+    description: 'Explore traditional Chinese guy names with strong meanings. Our random name picker gives you authentic names that sound great and have cultural depth.',
+    color: 'from-blue-500/20 to-indigo-500/20',
+    iconColor: 'text-blue-400'
+  },
+  {
+    id: 'zodiacNames',
+    icon: DragonTigerIcon,
+    title: 'Zodiac Name Match',
+    description: 'Find a Chinese name that aligns with your zodiac sign. Our name picker ensures your new name harmonizes with your astrological destiny.',
+    color: 'from-pink-500/20 to-purple-500/20',
+    iconColor: 'text-pink-400'
+  },
+  {
+    id: 'fantasyNames',
+    icon: Brain,
+    title: 'Fantasy Name Creator',
+    description: 'Generate unique fantasy Chinese names for games, stories, or creative projects. Imaginative names with authentic cultural roots.',
+    color: 'from-purple-500/20 to-pink-500/20',
+    iconColor: 'text-purple-400'
+  },
+  {
+    id: 'compatibility',
+    icon: Heart,
+    title: 'Zodiac Love Match',
+    description: 'Free zodiac compatibility checker for love! See if you and your crush are meant to be, check rat and dragon compatibility, and understand your relationship potential.',
+    color: 'from-red-500/20 to-pink-500/20',
+    iconColor: 'text-red-400'
+  },
+  {
+    id: 'fengShuiTips',
+    icon: Compass,
+    title: 'Feng Shui Tips',
+    description: 'Learn proven Feng Shui tricks to improve your home and office energy. Practical advice for everyday spaces.',
+    color: 'from-orange-500/20 to-red-500/20',
+    iconColor: 'text-orange-400'
+  }
+];
 
   return (
     <div className="container mx-auto px-4 py-8 relative z-10">
@@ -230,18 +231,18 @@ const HomePage: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500"></div>
             <div className="absolute -inset-4 bg-gradient-conic from-yellow-400/10 via-orange-400/10 to-yellow-400/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           </div>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-white via-yellow-200 to-orange-200 bg-clip-text text-transparent mb-6 leading-tight drop-shadow-lg">
-            Find Your Perfect Chinese Name - It's Totally Free!
-          </h1>
-          <h2 className="text-2xl font-semibold text-white/90 mb-4">
-            Get a Cool Chinese Name with AI Magic & Check Your Zodiac Match
-          </h2>
-          <p className="text-lg text-white/80 leading-relaxed max-w-3xl mx-auto mb-4">
-            Want a real Chinese name? We've got you covered! Our AI picks the best names for you, helps you check if you and your crush are zodiac compatible, and shows you traditional Chinese guy names that actually mean something.
-          </p>
-          <p className="text-base text-white/70 leading-relaxed max-w-4xl mx-auto">
-            Just pick a random Chinese name, see if it matches your zodiac sign, try out some fantasy Chinese names, and learn all the cool cultural stuff behind it. Everything's free and made for folks like us who want to dive into Chinese culture.
-          </p>
+          <h1 className="text-6xl font-bold ...">
+  Find Your Perfect Chinese Name – It's Free!
+</h1>
+<h2 className="text-2xl ...">
+  Get a Culturally Authentic Chinese Name with AI & Check Your Zodiac Match
+</h2>
+<p className="text-lg ...">
+  Want a real Chinese name? Our AI creates names that sound like yours, have beautiful meanings, and won't make native speakers laugh. Check zodiac compatibility, explore traditional male names, and dive into Chinese culture – all for free.
+</p>
+<p className="text-base ...">
+  Use our random name picker, see if a name matches your zodiac sign, or try fantasy Chinese names for creative projects. We explain the cultural stories behind every name so you can truly connect with your new name.
+</p>
           
           {/* Feng Shui Features */}
           <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -263,12 +264,12 @@ const HomePage: React.FC = () => {
         {/* Name Generator Section */}
         <div className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-yellow-200 to-orange-200 bg-clip-text text-transparent mb-4">
-              Get Your Chinese Name Right Now!
-            </h2>
-            <p className="text-xl text-white/70 max-w-3xl mx-auto">
-              Just fill out the form below and our AI will pick the perfect Chinese name for you
-            </p>
+            <h2 className="text-4xl font-bold ...">
+  Get Your Chinese Name Now
+</h2>
+<p className="text-xl ...">
+  Fill out the form and let our AI find the perfect Chinese name for you
+</p>
           </div>
 
           {/* Name Generator Form */}

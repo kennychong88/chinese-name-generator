@@ -1,341 +1,128 @@
-// 名人库起名服务 - 基于用户喜欢的名人生成个性化名字
-import { FamousPerson, famousChinesePeople } from '../data/famousChinesePeople';
+import axios from 'axios';
+import { FamousPerson } from '../data/famousChinesePeople'; // 引入人物类型
 
-
-import { chineseCharacters, pinyinMap, meaningMapEnglish } from '../data/chineseNames';
-
-export interface FamousPersonNameRequest {
-  englishName: string;
-  gender: 'male' | 'female' | 'neutral';
-  favoritePersonId: string;
-  style?: 'traditional' | 'modern' | 'business' | 'cute' | 'neutral';
-  additionalPreferences?: {
-    personality?: string[];
-    achievements?: string[];
-    culturalElements?: string[];
-  };
+// 定义返回的名字数据类型（与普通模式略有不同，包含 inspiredBy 字段）
+export interface FamousPersonName {
+  id: string;
+  name: string;           // 中文名
+  pinyin: string;         // 拼音
+  meaning: string;        // 寓意
+  gender: string;         // 性别
+  inspiredBy: string;     // 灵感来源人物
+  historicalContext?: string; // 历史背景（可选）
 }
 
 export interface FamousPersonNameResponse {
-  names: Array<{
-    id: string;
-    name: string;
-    pinyin: string;
-    meaning: string;
-    gender: string;
-    inspiredBy: {
-      person: FamousPerson;
-      elements: string[];
-      connection: string;
-    };
-    culturalContext: {
-      personality: string[];
-      achievements: string[];
-      culturalSignificance: string;
-    };
-  }>;
-  analysis: {
-    personalityMatch: number;
-    culturalAlignment: number;
-    nameStyleCompatibility: number;
-    recommendations: string[];
-  };
+  names: FamousPersonName[];
 }
 
-// 根据名人特征生成名字
-export const generateNamesInspiredByFamousPerson = async (
-  request: FamousPersonNameRequest
-): Promise<FamousPersonNameResponse> => {
-  const { englishName, gender, favoritePersonId, style = 'traditional', additionalPreferences } = request;
-  
-  // 获取用户喜欢的名人
-  const favoritePerson = famousChinesePeople.find(person => person.id === favoritePersonId);
-  if (!favoritePerson) {
-    throw new Error('未找到指定的名人信息');
-  }
+interface GenerateNamesParams {
+  englishName: string;
+  gender: 'male' | 'female' | 'neutral';
+  favoritePersonId: string;          // 所选人物ID
+  style: 'traditional' | 'modern' | 'business' | 'cute' | 'neutral';
+  // 注意：实际需要传入所选人物的详细信息，但这里我们假设组件会传入 person 对象
+  // 由于函数签名不能轻易改，我们可以在内部通过 ID 获取人物信息
+  // 但更简单的方法是：在组件中获取人物对象，然后传递给生成函数
+  // 不过为了最小改动，我们这里假设函数调用时会传入 person 对象（需要修改组件）
+  // 更合理的是：组件中获取 selectedFamousPerson 对象，然后传递给 generateNamesInspiredByFamousPerson
+  // 因此我们需要调整 HomePage.tsx 中调用该函数的地方，增加 person 参数。
+}
 
-  // 分析名人特征
-  const personTraits = analyzePersonTraits(favoritePerson);
-  const culturalElements = extractCulturalElements(favoritePerson);
-  
-  // 生成基于名人特征的名字
-  const names = generateInspiredNames(englishName, gender, favoritePerson, personTraits, culturalElements, style);
-  
-  // 分析匹配度
-  const analysis = analyzeCompatibility(favoritePerson, gender, style, additionalPreferences);
-  
-  return {
-    names,
-    analysis
-  };
-};
+// 为了兼容现有代码，我们保持原有函数签名，但内部需要从某个地方获取人物信息
+// 我们可以从 localStorage 或通过 ID 从数据源获取，但最简单的是直接要求组件传入 person 对象
+// 因此我建议修改 HomePage.tsx 中的调用，传递 selectedFamousPerson 对象
+// 这样就不需要再查询数据。
 
-// 分析名人特征
-const analyzePersonTraits = (person: FamousPerson) => {
-  return {
-    personality: person.personality,
-    achievements: person.achievements,
-    nameStyle: person.nameStyle,
-    culturalContext: person.nameComponents.culturalContext,
-    nameMeanings: person.nameComponents.meanings,
-    popularity: person.popularity
-  };
-};
+// 但为了快速实现，我们先假设组件已经能传入 person 对象，函数签名稍作调整：
+// 将参数类型改为包含 person 对象
+export interface GenerateFamousPersonParams {
+  englishName: string;
+  gender: 'male' | 'female' | 'neutral';
+  favoritePerson: FamousPerson;      // 直接传入人物对象
+  style: 'traditional' | 'modern' | 'business' | 'cute' | 'neutral';
+}
 
-// 提取文化元素
-const extractCulturalElements = (person: FamousPerson) => {
-  return {
-    characters: person.nameComponents.characters,
-    meanings: person.nameComponents.meanings,
-    culturalContext: person.nameComponents.culturalContext,
-    era: person.era,
-    category: person.category,
-    historicalImpact: person.historicalImpact
-  };
-};
+export async function generateNamesInspiredByFamousPerson(
+  params: GenerateFamousPersonParams
+): Promise<FamousPersonNameResponse> {
+  const { englishName, gender, favoritePerson, style } = params;
+  try {
+    // 构建提示词，包含人物信息
+    const prompt = `You are a professional Chinese name consultant. Based on the user's English name "${englishName}", generate 3 authentic Chinese names inspired by the style and characteristics of the famous historical figure "${favoritePerson.name}" (${favoritePerson.pinyin}).
 
-// 生成受名人启发的名字
-const generateInspiredNames = (
-  englishName: string,
-  gender: string,
-  person: FamousPerson,
-  traits: ReturnType<typeof analyzePersonTraits>,
-  culturalElements: ReturnType<typeof extractCulturalElements>,
-  style: string
-) => {
-  const names = [];
-  // const englishNameChars = englishName.split('');
-  
-  // 方法1：使用名人名字中的字符
-  const personNameChars = person.nameComponents.characters;
-  for (let i = 0; i < 3; i++) {
-    const name = generateNameFromPersonChars(personNameChars, englishName, gender, style);
-    if (name) {
-      names.push({
-        id: `person-inspired-${i}`,
-        name: name.name,
-        pinyin: name.pinyin,
-        meaning: name.meaning,
-        gender,
-        inspiredBy: {
-          person,
-          elements: ['Using characters from the historical figure\'s name'],
-          connection: `Inspired by ${person.englishName || person.name}'s name structure`
-        },
-        culturalContext: {
-          personality: person.personality,
-          achievements: person.achievements,
-          culturalSignificance: person.culturalSignificance
+About this figure: ${favoritePerson.description || 'A renowned historical figure.'}
+
+Requirements:
+1. Pronunciation should be close to the original English name.
+2. Each character must be common in modern Chinese (avoid rare or archaic characters).
+3. The name's meaning should be positive and match the user's gender preference: ${gender === 'male' ? 'masculine' : gender === 'female' ? 'feminine' : 'neutral or unisex'}.
+4. The name style should be: ${style} (traditional/modern/business/cute/neutral).
+5. The names should evoke the spirit, elegance, or qualities associated with ${favoritePerson.name}. For example, if the figure is known for wisdom, the name should reflect wisdom; if known for bravery, reflect bravery.
+6. Ensure the tones are harmonious (avoid consecutive third tones).
+7. Absolutely avoid any characters with negative meanings.
+
+Return the result as a JSON array in the following format:
+[
+  {
+    "chinese_name": "李明",
+    "pinyin": "Li Ming",
+    "meaning": "Bright and intelligent; inspired by the wisdom of ${favoritePerson.name}.",
+    "gender": "male"
+  },
+  ...
+]
+
+Only output the JSON array, no other text.`;
+
+    const response = await axios.post(
+      'https://api.deepseek.com/v1/chat/completions',
+      {
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that generates Chinese names inspired by historical figures.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.8,
+        max_tokens: 500,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`
         }
-      });
+      }
+    );
+
+    const content = response.data.choices[0].message.content;
+    // 提取 JSON 数组
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('Failed to parse AI response');
     }
-  }
-  
-  // 方法2：基于名人性格特征
-  const personalityNames = generateNamesFromPersonality(person.personality, englishName, gender, style);
-  personalityNames.forEach((name, index) => {
-    names.push({
-      id: `personality-${index}`,
-      name: name.name,
-      pinyin: name.pinyin,
-      meaning: name.meaning,
-      gender,
-              inspiredBy: {
-          person,
-          elements: person.personality,
-          connection: `Reflecting ${person.englishName || person.name}'s personality traits`
-        },
-      culturalContext: {
-        personality: person.personality,
-        achievements: person.achievements,
-        culturalSignificance: person.culturalSignificance
-      }
-    });
-  });
-  
-  // 方法3：基于名人成就
-  const achievementNames = generateNamesFromAchievements(person.achievements, englishName, gender, style);
-  achievementNames.forEach((name, index) => {
-    names.push({
-      id: `achievement-${index}`,
-      name: name.name,
-      pinyin: name.pinyin,
-      meaning: name.meaning,
-      gender,
-              inspiredBy: {
-          person,
-          elements: person.achievements,
-          connection: `Carrying forward ${person.englishName || person.name}'s legacy and achievements`
-        },
-      culturalContext: {
-        personality: person.personality,
-        achievements: person.achievements,
-        culturalSignificance: person.culturalSignificance
-      }
-    });
-  });
-  
-  return names.slice(0, 6); // 返回前6个名字
-};
+    const names = JSON.parse(jsonMatch[0]);
 
-// 从名人名字字符生成名字
-const generateNameFromPersonChars = (personChars: string[], englishName: string, gender: string, style: string) => {
-  const genderChars = chineseCharacters[gender as keyof typeof chineseCharacters] || chineseCharacters.male;
-  const styleChars = genderChars[style as keyof typeof genderChars] || genderChars.traditional;
-  
-  // 结合名人字符和风格字符
-  const availableChars = [...new Set([...personChars, ...styleChars])];
-  
-  const nameLength = englishName.length <= 4 ? 2 : 3;
-  const chars: string[] = [];
-  
-  for (let i = 0; i < nameLength; i++) {
-    const charPool = i === 0 ? personChars : availableChars;
-    const randomChar = charPool[Math.floor(Math.random() * charPool.length)];
-    chars.push(randomChar);
-  }
-  
-  const name = chars.join('');
-  const pinyin = chars.map(char => pinyinMap[char] || char).join(' ');
-  const meaning = chars.map(char => meaningMapEnglish[char] || 'beautiful').join(', ');
-  
-  return { name, pinyin, meaning };
-};
-
-// 从名人性格生成名字
-const generateNamesFromPersonality = (personality: string[], englishName: string, gender: string, style: string) => {
-  const names = [];
-  const genderChars = chineseCharacters[gender as keyof typeof chineseCharacters] || chineseCharacters.male;
-  const styleChars = genderChars[style as keyof typeof genderChars] || genderChars.traditional;
-  
-  // 根据性格特征选择字符
-  personality.forEach((trait) => {
-    const traitChars = styleChars.filter(char => {
-      const charMeaning = meaningMapEnglish[char] || '';
-      return charMeaning.includes(trait) || trait.includes(char);
-    });
-    
-    if (traitChars.length > 0) {
-      const chars = [traitChars[0]];
-      if (englishName.length > 4) {
-        chars.push(styleChars[Math.floor(Math.random() * styleChars.length)]);
-      }
-      
-      const name = chars.join('');
-      const pinyin = chars.map(char => pinyinMap[char] || char).join(' ');
-      const meaning = `${trait}, ${chars.map(char => meaningMapEnglish[char] || 'beautiful').join(', ')}`;
-      
-      names.push({ name, pinyin, meaning });
+    // 转换为应用内部格式，添加 inspiredBy 字段
+    const generatedNames = names.map((item: any, index: number) => ({
+  id: `famous-${Date.now()}-${index}`,
+  name: item.chinese_name,
+  pinyin: item.pinyin,
+  meaning: item.meaning,
+  gender: item.gender,
+  // 修改 inspiredBy 为对象，包含 person.name
+  inspiredBy: {
+    person: {
+      name: favoritePerson.name
     }
-  });
-  
-  return names.slice(0, 2);
-};
+  },
+  historicalContext: favoritePerson.description 
+  ? favoritePerson.description.substring(0, 60) + '...' 
+  : 'A figure from Chinese history.',
+}));
 
-// 从名人成就生成名字
-const generateNamesFromAchievements = (achievements: string[], englishName: string, gender: string, style: string) => {
-  const names = [];
-  const genderChars = chineseCharacters[gender as keyof typeof chineseCharacters] || chineseCharacters.male;
-  const styleChars = genderChars[style as keyof typeof genderChars] || genderChars.traditional;
-  
-  achievements.forEach((achievement) => {
-    // 提取成就中的关键词
-    const keywords = achievement.split(/[，、]/);
-    const relevantChars = styleChars.filter(char => {
-      const charMeaning = meaningMapEnglish[char] || '';
-      return keywords.some(keyword => charMeaning.includes(keyword) || keyword.includes(char));
-    });
-    
-    if (relevantChars.length > 0) {
-      const chars = [relevantChars[0]];
-      if (englishName.length > 4) {
-        chars.push(styleChars[Math.floor(Math.random() * styleChars.length)]);
-      }
-      
-      const name = chars.join('');
-      const pinyin = chars.map(char => pinyinMap[char] || char).join(' ');
-      const meaning = `Inheriting the spirit of ${achievement}, ${chars.map(char => meaningMapEnglish[char] || 'beautiful').join(', ')}`;
-      
-      names.push({ name, pinyin, meaning });
-    }
-  });
-  
-  return names.slice(0, 2);
-};
-
-// 分析兼容性
-const analyzeCompatibility = (
-  person: FamousPerson,
-  gender: string,
-  style: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  additionalPreferences?: Record<string, unknown>
-) => {
-  let personalityMatch = 0;
-  let culturalAlignment = 0;
-  let nameStyleCompatibility = 0;
-  const recommendations: string[] = [];
-  
-  // 性格匹配度
-  if (person.gender === gender || person.gender === 'neutral') {
-    personalityMatch += 30;
+    return { names: generatedNames };
+  } catch (error) {
+    console.error('Error generating famous person names:', error);
+    return { names: [] };
   }
-  if (person.nameStyle === style) {
-    personalityMatch += 40;
-  }
-  if (person.popularity >= 8) {
-    personalityMatch += 30;
-  }
-  
-  // 文化契合度
-  culturalAlignment = Math.min(100, person.popularity * 10);
-  
-  // 名字风格兼容性
-  if (person.nameStyle === style) {
-    nameStyleCompatibility = 100;
-  } else if (person.nameStyle === 'traditional' && style === 'modern') {
-    nameStyleCompatibility = 70;
-  } else if (person.nameStyle === 'modern' && style === 'traditional') {
-    nameStyleCompatibility = 70;
-  } else {
-    nameStyleCompatibility = 50;
-  }
-  
-  // Generate recommendations
-  if (personalityMatch < 50) {
-    recommendations.push(`Consider choosing options that better match ${person.englishName || person.name}'s gender or style`);
-  }
-  if (culturalAlignment < 70) {
-    recommendations.push(`${person.englishName || person.name} has high cultural influence, consider learning more about their background`);
-  }
-  if (nameStyleCompatibility < 80) {
-    recommendations.push(`Consider adjusting the name style to better reflect ${person.englishName || person.name}'s characteristics`);
-  }
-  
-  return {
-    personalityMatch,
-    culturalAlignment,
-    nameStyleCompatibility,
-    recommendations
-  };
-};
-
-// 获取推荐名人列表
-export const getRecommendedFamousPeople = (gender: string, style: string) => {
-  // 简化过滤逻辑，确保能显示名人
-  return famousChinesePeople
-    .filter(person => {
-      // 只检查性别匹配，不限制人气
-      return person.gender === gender || person.gender === 'neutral';
-    })
-    .sort((a, b) => {
-      // 按人气排序
-      return b.popularity - a.popularity;
-    })
-    .slice(0, 30); // 显示更多名人
-};
-
-// 获取名人详细信息
-export const getFamousPersonDetails = (personId: string): FamousPerson | null => {
-  return famousChinesePeople.find(person => person.id === personId) || null;
-}; 
+}

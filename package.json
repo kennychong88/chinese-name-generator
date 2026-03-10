@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.13.6",
     "lucide-react": "^0.344.0",
     "puter": "^1.0.0",
     "react": "^18.3.1",
