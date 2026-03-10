@@ -345,9 +345,9 @@ const services = [
 <button
   type="submit"
   disabled={loading || !englishName.trim()}
-  className="..."
+ className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-5 px-8 rounded-xl font-bold text-lg hover:from-yellow-400 hover:to-orange-500 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-yellow-500/30 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
 >
-  <span className="...">
+  <span className="flex items-center justify-center space-x-2 relative z-10">
     {loading ? (
       <>
         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
